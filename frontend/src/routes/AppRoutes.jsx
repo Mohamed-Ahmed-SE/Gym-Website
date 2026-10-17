@@ -1,13 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Home/Home';
-import Programs from '../pages/Programs/Programs';
-import ProgramDetails from '../pages/Programs/ProgramDetails';
-import Trainers from '../pages/Trainers/Trainers';
-import Membership from '../pages/Membership/Membership';
-import Contact from '../pages/Contact/Contact';
-import About from '../pages/About/About';
-import Gallery from '../pages/Gallery/Gallery';
+import RebuiltSurface from '../pages/RebuiltSurface';
 import Booking from '../pages/Booking/Booking';
 import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
@@ -17,14 +11,14 @@ const AppRoutes = () => {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/programs" element={<Programs />} />
-            <Route path="/programs/:id" element={<ProgramDetails />} />
-            <Route path="/trainers" element={<Trainers />} />
-            <Route path="/membership" element={<Membership />} />
+            <Route path="/about" element={<RebuiltSurface kind="about" />} />
+            <Route path="/gallery" element={<RebuiltSurface kind="gallery" />} />
+            <Route path="/programs" element={<RebuiltSurface kind="programs" />} />
+            <Route path="/programs/:id" element={<RebuiltSurface kind="program-details" />} />
+            <Route path="/trainers" element={<RebuiltSurface kind="trainers" />} />
+            <Route path="/membership" element={<RebuiltSurface kind="membership" />} />
             <Route path="/booking" element={<Booking />} />
-            <Route path="/contact" element={<Contact />} />
+            <Route path="/contact" element={<RebuiltSurface kind="contact" />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
