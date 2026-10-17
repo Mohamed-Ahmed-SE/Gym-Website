@@ -1,77 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import HeroSection from './HeroSection';
-import HomeStats from './sections/HomeStats';
-import HomeFeatures from './sections/HomeFeatures';
-import ProgramsPreview from './ProgramsPreview';
-import HomeGallery from './sections/HomeGallery';
-import TrainersPreview from './TrainersPreview';
-import HomeTestimonials from './sections/HomeTestimonials';
-import HomeFAQ from './sections/HomeFAQ';
-import HomeNewsletter from './sections/HomeNewsletter';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowUpRight, CalendarDays, Clock3, Dumbbell, Flame, MapPin, Play, Sparkles, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { programsAPI } from '../../api/programs';
 import { trainersAPI } from '../../api/trainers';
-import Button from '../../components/ui/Button';
-import Loading from '../../components/common/Loading/Loading';
+import { programs as fallbackPrograms } from '../../data/programs';
+import { trainers as fallbackTrainers } from '../../data/trainers';
+
+const heroImage = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1800&auto=format&fit=crop';
+const secondaryImage = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200&auto=format&fit=crop';
 
 const Home = () => {
-    const [programs, setPrograms] = useState([]);
-    const [trainers, setTrainers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [programs, setPrograms] = useState(fallbackPrograms);
+    const [trainers, setTrainers] = useState(fallbackTrainers);
+    const [goal, setGoal] = useState('Everything');
+    const [scheduleDay, setScheduleDay] = useState('Today');
+    const [notice, setNotice] = useState('');
 
     useEffect(() => {
-        fetchData();
+        Promise.all([programsAPI.getAll().catch(() => []), trainersAPI.getAll().catch(() => [])]).then(([remotePrograms, remoteTrainers]) => {
+            if (remotePrograms?.length) setPrograms(remotePrograms);
+            if (remoteTrainers?.length) setTrainers(remoteTrainers);
+        });
     }, []);
 
-    const fetchData = async () => {
-        try {
-            const [programsData, trainersData] = await Promise.all([
-                programsAPI.getAll().catch(() => []),
-                trainersAPI.getAll().catch(() => []),
-            ]);
-            setPrograms(programsData);
-            setTrainers(trainersData);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="w-full overflow-x-hidden min-h-screen flex items-center justify-center">
-                <Loading size="lg" />
-            </div>
-        );
-    }
+    const goals = ['Everything', 'Build strength', 'Move better', 'Get fitter'];
+    const filteredPrograms = useMemo(() => {
+        if (goal === 'Everything') return programs.slice(0, 4);
+        const match = { 'Build strength': ['Strength Training', 'CrossFit'], 'Move better': ['Yoga Flow'], 'Get fitter': ['HIIT Cardio', 'CrossFit'] }[goal] || [];
+        return programs.filter((program) => match.includes(program.title));
+    }, [goal, programs]);
+    const book = (program) => { setNotice(`${program.title} saved — choose a time to finish your booking.`); window.setTimeout(() => setNotice(''), 4500); };
 
     return (
-        <div className="w-full overflow-x-hidden">
-            <HeroSection />
-            <HomeStats />
-            <HomeFeatures />
-            <ProgramsPreview programs={programs} />
-            <HomeGallery />
-            <TrainersPreview trainers={trainers} />
-            <HomeTestimonials />
-            <HomeFAQ />
-
-            {/* Call to Action Section */}
-            <section className="py-24 bg-primary text-white text-center">
-                <div className="container-padding">
-                    <h2 className="text-5xl md:text-7xl font-display uppercase italic mb-6">
-                        Ready to Transform?
-                    </h2>
-                    <p className="text-xl mb-10 max-w-2xl mx-auto font-light">
-                        Join the elite community at IronGym today and start your journey to a stronger, healthier you.
-                    </p>
-                    <Button to="/membership" variant="secondary" className="bg-white text-primary border-transparent hover:bg-gray-100 hover:text-primary text-lg px-10 py-4">
-                        Join Now
-                    </Button>
-                </div>
-            </section>
-
-            <HomeNewsletter />
+        <div className="home-page">
+            {/* THESIS: IronGym is a working training desk, not a hype wall; it helps a visitor choose, see, and book their next useful session. OWN-WORLD: charcoal paper, bone panels, acid-lime marks, oversized condensed type, coach-note labels, and bright documentary gym photography. STORY: understand the offer in seconds, find a fit by goal, see today’s rhythm, then book or explore. FIRST VIEWPORT: split hero with primary action left and a live session board right. FORM: training desk, fifth grounded direction, seed 81927ea0. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md */}
+            {notice && <div className="toast" role="status"><Sparkles size={17} /> {notice}<button aria-label="Dismiss" onClick={() => setNotice('')}><X size={16} /></button></div>}
+            <section className="hero-shell"><div className="container-padding hero-grid"><div className="hero-copy"><p className="note-label"><span className="dot" /> Open today · 05:30 — 23:00</p><h1>Train with<br /><em>intent.</em></h1><p className="hero-lede">A serious space for stronger bodies, clearer minds, and training that fits the life you actually live.</p><div className="hero-actions"><Link className="button button-lime" to="/booking">Book a session <ArrowUpRight size={18} /></Link><Link className="text-link" to="/programs">Find your program <ArrowUpRight size={17} /></Link></div><div className="hero-proof"><div className="avatar-stack"><span>JD</span><span>MS</span><span>AK</span></div><span>Join 2,000+ people<br />building their rhythm.</span></div></div><div className="hero-visual"><img src={heroImage} alt="Athlete lifting a barbell in the IronGym training floor" /><div className="image-caption"><span>01 / FLOOR NOTES</span><strong>Good training<br />is repeatable.</strong></div><div className="session-board"><div className="board-head"><span>ON THE FLOOR</span><span className="live-dot">Live</span></div><div className="board-session"><div><strong>Strength Lab</strong><small>with Alex · 45 min</small></div><span>18:00</span></div><div className="board-session"><div><strong>Mobility Reset</strong><small>with Marcus · 60 min</small></div><span>19:30</span></div><Link to="/booking" className="board-link">See today’s full board <ArrowUpRight size={15} /></Link></div></div></div><div className="hero-ticker"><span>Strength</span><span>Conditioning</span><span>Mobility</span><span>Community</span><span>Strength</span><span>Conditioning</span></div></section>
+            <section className="section-shell choose-section"><div className="container-padding"><div className="section-heading"><div><p className="note-label">A better place to start</p><h2>What are you<br /><em>here to build?</em></h2></div><p>Skip the guesswork. Tell us what you want to feel more of and we’ll point you to the right starting line.</p></div><div className="goal-picker">{goals.map((item) => <button key={item} className={goal === item ? 'active' : ''} onClick={() => setGoal(item)}>{item}</button>)}</div><div className="program-grid">{filteredPrograms.map((program, index) => <article className="program-tile" key={program.id}><div className="program-image"><img src={program.image} alt={program.title} /><span className="tile-index">0{index + 1}</span><span className="program-time"><Clock3 size={14} /> {program.duration}</span></div><div className="program-info"><div><h3>{program.title}</h3><p>{program.description}</p></div><button aria-label={`Book ${program.title}`} onClick={() => book(program)}><ArrowUpRight size={20} /></button></div></article>)}</div>{filteredPrograms.length === 0 && <div className="empty-state">No sessions match that goal yet. Try everything or <Link to="/contact">talk to the team</Link>.</div>}<div className="align-right"><Link className="text-link dark" to="/programs">Explore all programs <ArrowUpRight size={17} /></Link></div></div></section>
+            <section className="rhythm-section"><div className="container-padding rhythm-grid"><div className="rhythm-image"><img src={secondaryImage} alt="Woman preparing for a workout with a kettlebell" /><div className="play-chip"><Play size={14} fill="currentColor" /> See the floor</div></div><div className="rhythm-copy"><p className="note-label lime-note">How it works</p><h2>Make training<br /><em>your rhythm.</em></h2><p>Come for a class, stay for the people. Our coaches meet you where you are, keep the room moving, and make every session feel like a win worth repeating.</p><div className="rhythm-list"><div><span>01</span><strong>Pick your pace</strong><small>Classes and coaching for every starting point.</small></div><div><span>02</span><strong>Show up with a plan</strong><small>Know the coach, time, intensity, and what to bring.</small></div><div><span>03</span><strong>Leave with momentum</strong><small>A next step already waiting in your profile.</small></div></div><Link className="button button-outline" to="/about">Meet IronGym <ArrowUpRight size={17} /></Link></div></div></section>
+            <section className="section-shell schedule-section"><div className="container-padding"><div className="section-heading compact"><div><p className="note-label">Your next hour</p><h2>Find your<br /><em>window.</em></h2></div><Link className="text-link dark" to="/booking">Open booking <ArrowUpRight size={17} /></Link></div><div className="schedule-tabs">{['Today', 'Tomorrow', 'Saturday'].map((day) => <button key={day} onClick={() => setScheduleDay(day)} className={scheduleDay === day ? 'active' : ''}>{day}</button>)}</div><div className="schedule-row"><div className="schedule-time">06:00<span>AM</span></div><div className="schedule-main"><div className="schedule-icon lime"><Dumbbell size={19} /></div><div><h3>Strength Lab</h3><p>Build a base · Alex Drago</p></div></div><span className="level">High intensity</span><Link to="/booking" className="schedule-arrow" aria-label="Book Strength Lab"><ArrowUpRight size={19} /></Link></div><div className="schedule-row"><div className="schedule-time">18:00<span>PM</span></div><div className="schedule-main"><div className="schedule-icon orange"><Flame size={19} /></div><div><h3>HIIT Cardio</h3><p>Get fitter, faster · Sarah Vantz</p></div></div><span className="level">Very high</span><Link to="/booking" className="schedule-arrow" aria-label="Book HIIT Cardio"><ArrowUpRight size={19} /></Link></div><div className="schedule-row"><div className="schedule-time">19:30<span>PM</span></div><div className="schedule-main"><div className="schedule-icon blue"><Sparkles size={19} /></div><div><h3>Mobility Reset</h3><p>Move better · Marcus Cole</p></div></div><span className="level">Low intensity</span><Link to="/booking" className="schedule-arrow" aria-label="Book Mobility Reset"><ArrowUpRight size={19} /></Link></div></div></section>
+            <section className="community-section"><div className="container-padding community-grid"><div><p className="note-label lime-note">The people make the place</p><h2>Find your<br /><em>good hard.</em></h2><p>From first-timers to familiar faces, this is a room that knows how to push and when to pull back.</p><Link to="/trainers" className="button button-lime">Meet your coaches <ArrowUpRight size={17} /></Link></div><div className="coach-stack">{trainers.slice(0, 3).map((trainer) => <div className="coach-card" key={trainer.id}><img src={trainer.image} alt={trainer.name} /><div><strong>{trainer.name}</strong><span>{trainer.role}</span></div></div>)}</div></div></section>
+            <section className="final-cta"><div className="container-padding"><div className="cta-mark"><CalendarDays size={21} /> Ready when you are</div><h2>Your next session<br /><em>starts here.</em></h2><div className="cta-actions"><Link className="button button-lime" to="/membership">See membership options <ArrowUpRight size={18} /></Link><Link className="text-link light" to="/contact"><MapPin size={16} /> 123 Iron Street, Muscle City</Link></div></div></section>
         </div>
     );
 };
