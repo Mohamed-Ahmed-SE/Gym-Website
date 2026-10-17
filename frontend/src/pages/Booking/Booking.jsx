@@ -8,6 +8,8 @@ import Input from '../../components/common/Input/Input';
 import Loading from '../../components/common/Loading/Loading';
 import Modal from '../../components/common/Modal/Modal';
 import { Icons } from '../../components/ui/Icons';
+import { programs as fallbackPrograms } from '../../data/programs';
+import { trainers as fallbackTrainers } from '../../data/trainers';
 
 const Booking = () => {
     const { isAuthenticated } = useAuth();
@@ -35,12 +37,12 @@ const Booking = () => {
         try {
             setLoading(true);
             const [programsData, trainersData, bookingsData] = await Promise.all([
-                programsAPI.getAll(),
-                trainersAPI.getAll(),
+                programsAPI.getAll().catch(() => []),
+                trainersAPI.getAll().catch(() => []),
                 isAuthenticated ? bookingsAPI.getAll().catch(() => []) : Promise.resolve([]),
             ]);
-            setPrograms(programsData);
-            setTrainers(trainersData);
+            setPrograms(programsData.length ? programsData : fallbackPrograms);
+            setTrainers(trainersData.length ? trainersData : fallbackTrainers);
             setBookings(bookingsData);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -51,10 +53,12 @@ const Booking = () => {
 
     const handleProgramSelect = (program) => {
         setSelectedProgram(program);
+        const programId = program._id || program.id;
+        const trainerId = program.instructorId?._id || program.instructorId || '';
         setFormData({
             ...formData,
-            programId: program._id,
-            trainerId: program.instructorId?._id || '',
+            programId,
+            trainerId,
         });
         setShowBookingModal(true);
     };
@@ -149,7 +153,7 @@ const Booking = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                         {programs.map((program) => (
                             <div
-                                key={program._id}
+                                key={program._id || program.id}
                                 className="bg-surface border border-white/10 rounded-lg overflow-hidden hover:border-primary/50 transition-colors"
                             >
                                 <img
